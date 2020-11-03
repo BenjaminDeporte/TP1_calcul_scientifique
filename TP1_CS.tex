@@ -1,0 +1,224 @@
+\documentclass[french]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{babel}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\title{TP1 Calcul Scientifique}
+\author{B Deporte}
+\date{Novembre 2020}
+
+\begin{document}
+
+\maketitle
+
+\section{Problème posé}
+
+On considère l'équation de diffusion 1D :
+
+\begin{align}
+\partial_{t}u(x,t)-\partial_{x}^{2}(x,t)+au(x,t)=0,\hspace{2mm}(x,t)\in]0,1[\times[0,T]
+\end{align}
+
+avec les conditions aux limites :
+
+\begin{align}
+\partial_{x}u(x,t)&=0, \hspace{2mm}, x=0, t\in[0,T] \\
+u(x,t)&=0, \hspace{2mm}, x=1, t\in[0,T] \\
+u(x,0)&=\mathrm{cos}(\frac{\pi}{2}x), \hspace{2mm} x\in]0,1[, t=0
+\end{align}
+
+\section{Solution explicite}
+
+Par la méthode de séparation des variables - on pose $ u(x,t)=\varphi(x)\psi(t) $
+
+L'équation principale devient : $ \varphi(x)\psi'(t)-\varphi''(x)\psi(t)+a\varphi(x)\psi(t)=0 $
+
+Et donc pour $ \phi(x)\psi(t) \neq 0 $ :
+
+\[
+\frac{\psi'(t)}{\psi(t)}-\frac{\varphi''(x)}{\varphi(x)}+a=0
+\]
+
+Les conditions aux limites permettent d'écrire :
+
+\begin{align}
+\varphi'(0)&=0 \\
+\varphi(1)&=0 \\
+\varphi(x)\psi(0)&=\mathrm{cos}(\frac{\pi}{2}x), \hspace{2mm} x\in]0,1[
+\end{align}
+
+On a donc : $ \frac{\psi'(t)}{\psi(t)}=\lambda \in \mathbb{R} $, et $ \frac{\varphi''(x)}{\varphi(x)}=\lambda+a $.
+
+L'équation en $ \psi $ se résoud en $ \psi(t)=\psi(0)\exp(\lambda t) $
+
+La solution de $ \frac{\varphi''(x)}{\varphi(x)}=\lambda+a $ dépend des racines de l'équation caractéristique $ r^{2}=\lambda+a $.
+
+\paragraph{1er cas : $\lambda + a > 0$}
+
+Alors $ \varphi(x)=A\exp(\sqrt{\lambda+a}x)+B\exp(-\sqrt{\lambda+a}x) $, avec $ A,B \in \mathbb{R} $.
+
+Les conditions aux limites s'écrivent :
+\begin{align}
+\varphi'(0)&=A \sqrt{\lambda+a} - B \sqrt{\lambda+a}=0 \\
+\varphi(1)&= A\exp(\sqrt{\lambda+a})+B\exp(-\sqrt{\lambda+a})=0 
+\end{align}
+
+D'où : $ A = B = 0 $ : pas de solution non nulle.
+
+\paragraph{2e cas : $\lambda + a = 0$}
+
+Alors $ \varphi''(x)=0 $, donc $ \varphi(x)=Ax+B $, et $ A=B=0 $ aussi avec les conditions aux limites. Pas de solution non nulle.
+
+\paragraph{3e cas : $\lambda + a < 0$}
+
+Les racines de l'équation caractéristique sont complexes, et : $ \varphi(x)=A\mathrm{cos}(\sqrt{-(\lambda+a)}x)+B\mathrm{sin}(-\sqrt{-(\lambda+a)}x) $
+
+Les conditions aux limites donnent : $ \varphi'(0)=B=0 $, et $ \varphi(1)=A \mathrm{cos}(\sqrt{-(\lambda+a}))=0 $. 
+
+Une solution non nulle $ A\neq 0 $ implique $ \sqrt{-(\lambda+a)} = \frac{\pi}{2}+k\pi $ avec $ k \in \mathbb{Z} $
+
+Donc $ \varphi(x)=A\mathrm{cos(\frac{\pi}{2}+k\pi)x} $.
+
+La dernière condition aux limites s'écrit alors : $ \psi(0)A \mathrm{cos(\frac{\pi}{2}+k\pi)x} = \mathrm{cos}(\frac{\pi}{2}x)$, ce qui donne : $ A\psi(0)=1, k=0 $
+
+Au final, $ \varphi(x)\psi(t) = \mathrm{cos}(\frac{\pi}{2}x)\exp(\lambda t) $ avec $ -\lambda - a = \frac{\pi^{2}}{4} $, donc :
+
+\[
+u(x,t)=\mathrm{cos}(\frac{\pi}{2}x).\exp(-(a+\frac{\pi^{2}}{4})t)
+\]
+
+\section{Méthode des différences finies}
+
+On considère un maillage uniforme espace-temps de $ [0,1] \times [0,T] $, avec $ \delta x = 1 / J $ et $ \delta t = T / N $.
+
+Un point de la grille est donné par $ (x_{j},t_{n}) = (j.\delta x, n.\delta t) $ avec $ j \in (0,J) $ et $ n \in (0,N) $
+
+On utilise les développements de Taylor à l'ordre 2 et à l'ordre 3 :
+
+\begin{align}
+v(x_{j+1}) &= v(x_{j}) + v'(x_{j}).\delta x + \frac{v''(x_{j})}{2!}.\delta x^{2} + O(\delta x^{3}) \\
+v(x_{j-1}) &= v(x_{j}) - v'(x_{j}).\delta x + \frac{v''(x_{j})}{2!}.\delta x^{2} + O(\delta x^{3}) \\
+v(x_{j+1}) &= v(x_{j}) + v'(x_{j}).\delta x + \frac{v''(x_{j})}{2!}.\delta x^{2} + \frac{v'''(x_{j+1})}{3!} + O(\delta x^{4}) \\
+v(x_{j-1}) &= v(x_{j}) - v'(x_{j}).\delta x + \frac{v''(x_{j})}{2!}.\delta x^{2} - \frac{v'''(x_{j+1})}{3!} + O(\delta x^{4}) \\
+\end{align}
+
+pour approximer les dérivées première et seconde en espace :
+
+\begin{align}
+\partial_{x}v(x_{j})=\frac{v(x_{j+1})-v(x_{j-1})}{2\delta x}+O(\delta x^{2})
+\end{align}
+
+\begin{align}
+\partial_{x}^{2}v(x_{j})=\frac{v(x_{j+1})-2v(x_{j})+v(x_{j-1})}{\delta x^{2}}+O(\delta x^{2})
+\end{align}
+
+On prend par contre l'approximation d'ordre 1 en temps, à savoir :
+
+\[
+\partial_{t}v(t_{n})= \frac{v(t_{n+1})-v(t_{n})}{\delta t} + O(\delta t)
+\]
+
+\subsection{Discrétisation complète avec $\theta$-schéma}
+
+\subsubsection{Schéma explicite}
+
+On pose $ u(x_{j},t_{n}) = u_{j}^{n} $.
+
+L'équation (1) donne le schéma explicite (terme courant $ j \geq 1 $) :
+
+\[
+\frac{u_{j}^{n+1}-u_{j}^{n}}{\delta t}-\frac{u_{j+1}^{n}-2u_{j}^{n}+u_{j-1}^{n}}{\delta x^{2}}+au_{j}^{n}=0+O(\delta t)+O(\delta x^{2})
+\]
+
+Soit :
+
+\begin{align}
+\frac{1}{\delta t}u_{j}^{n+1}=\frac{1}{\delta t}u_{j}^{n}+
+\frac{1}{\delta x^{2}}\left(u_{j+1}^{n}-2u_{j}^{n}+u_{j-1}^{n} \right)-au_{j}^{n}
+\end{align}
+
+Pour le terme en $ j=0 $, cad $ x=0 $, on utilise la condition aux limites (2), qui donne, en introduisant un terme fictif $ u_{-1}^{n} $ :
+
+\[
+\frac{u_{1}^{n}-u_{-1}^{n}}{2 \delta x} = 0
+\]
+
+donc $ u_{1}^{n} = u_{-1}^{n} $
+
+et donc, pour $ j=0 $, l'équation (17) devient :
+
+\[
+\frac{1}{\delta t}u_{0}^{n+1}=\frac{1}{\delta t}u_{0}^{n}+
+\frac{2}{\delta x^{2}}\left(u_{1}^{n}-u_{0}^{n} \right)-au_{0}^{n}
+\]
+
+La condition aux limites (3) donne $ u_{J}^{n}=0 $, on va donc poser simplement :
+
+\[
+U^{n}=(u_{0}^{n}, u_{1}^{n}, ... ,u_{J-1}^{n})^{T}
+\]
+
+On a alors :
+
+\begin{align}
+\frac{1}{\delta t}U^{n+1}=
+\begin{pmatrix}
+u_{0}^{n+1} \\ u_{1}^{n+1} \\ \hdots \\ u_{J-1}^{n+1}
+\end{pmatrix} =
+\frac{1}{\delta t}U^{n}
+- \frac{1}{\delta x^{2}}
+\begin{pmatrix}
+2+a\delta x^{2} & -2 & \hdots \\
+-1 & 2+a\delta x^{2} & -1 & \hdots \\
+\ddots \\
+\hdots & -1 & 2+a\delta x^{2} & -1 
+\end{pmatrix}
+\begin{pmatrix}
+u_{0}^{n} \\ u_{1}^{n} \\ \hdots \\ u_{J-1}^{n}
+\end{pmatrix}
+\end{align}
+
+Soit :
+
+\begin{align}
+\frac{1}{\delta t}\left(U^{n+1}-U^{n}\right) + AU^{n}=0
+\end{align}
+
+avec :
+
+\begin{align}
+A = \frac{1}{\delta x^{2}}
+\begin{pmatrix}
+2+a\delta x^{2} & -2 & \hdots \\
+-1 & 2+a\delta x^{2} & -1 & \hdots \\
+\ddots \\
+\hdots & -1 & 2+a\delta x^{2} & -1 
+\end{pmatrix}
+\end{align}
+
+\subsubsection{Schéma implicite et $\theta $ schéma}
+
+Le schéma implicite se déduit du schéma explicite (19) :
+
+\[
+\frac{1}{\delta t}\left(U^{n+1}-U^{n}\right) + AU^{n+1}=0
+\]
+
+Et le theta-schéma est combinaison linéaire des deux schémas explicite (x $1-\theta$ ) et implicite (x $\theta$) :
+
+\begin{align}
+\frac{1}{\delta t}\left(U^{n+1}-U^{n}\right) + 
+A\left((1-\theta)U^{n}+\theta U^{n+1}\right)=0
+\end{align}
+
+pour $ 0 \leq \theta \leq 1 $
+
+
+
+
+
+\end{document}
