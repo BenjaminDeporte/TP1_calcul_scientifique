@@ -17,10 +17,10 @@
 
 \section{Problème posé}
 
-On considère l'équation de diffusion 1D :
+On considère l'équation de diffusion 1D (avec $ a>0 $) :
 
 \begin{align}
-\partial_{t}u(x,t)-\partial_{x}^{2}(x,t)+au(x,t)=0,\hspace{2mm}(x,t)\in]0,1[\times[0,T]
+\partial_{t}u(x,t)-\partial_{x}^{2}u(x,t)+au(x,t)=0,\hspace{2mm}(x,t)\in]0,1[\times[0,T]
 \end{align}
 
 avec les conditions aux limites :
@@ -175,7 +175,7 @@ u_{0}^{n+1} \\ u_{1}^{n+1} \\ \hdots \\ u_{J-1}^{n+1}
 2+a\delta x^{2} & -2 & \hdots \\
 -1 & 2+a\delta x^{2} & -1 & \hdots \\
 \ddots \\
-\hdots & -1 & 2+a\delta x^{2} & -1 
+\hdots & \hdots & -1 & 2+a\delta x^{2} 
 \end{pmatrix}
 \begin{pmatrix}
 u_{0}^{n} \\ u_{1}^{n} \\ \hdots \\ u_{J-1}^{n}
@@ -196,7 +196,7 @@ A = \frac{1}{\delta x^{2}}
 2+a\delta x^{2} & -2 & \hdots \\
 -1 & 2+a\delta x^{2} & -1 & \hdots \\
 \ddots \\
-\hdots & -1 & 2+a\delta x^{2} & -1 
+\hdots & \hdots & -1 & 2+a\delta x^{2} 
 \end{pmatrix}
 \end{align}
 
@@ -217,6 +217,16 @@ A\left((1-\theta)U^{n}+\theta U^{n+1}\right)=0
 
 pour $ 0 \leq \theta \leq 1 $
 
+\subsubsection{Condition stabilité du $\theta$-schéma}
+
+On rappelle la condition de stabilité du $ \theta $-schéma, alias condition de stabilité de Von Neumann pour l'équation (1) :
+
+\begin{align}
+\mathrm{soit}\hspace{2mm}\theta &\geq 1/2 \\
+\mathrm{si}\hspace{2mm}\theta \in [0,1/2[ : \frac{\delta t}{\delta x^{2}} &\leq \frac{1}{2(1-2\theta)}
+\end{align}
+
+\subsection{Mise en oeuvre $\theta$-schéma : voir NB Python}
 
 
 
