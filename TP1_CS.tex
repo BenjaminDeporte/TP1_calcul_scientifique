@@ -228,6 +228,217 @@ On rappelle la condition de stabilité du $ \theta $-schéma, alias condition de
 
 \subsection{Mise en oeuvre $\theta$-schéma : voir NB Python}
 
+\section{Méthode Elements Finis}
+
+\subsection{Formulation variationnelle}
+
+On va classiquement multiplier l'équation (1) par une fonction $ v : x \mapsto v(x) $ "suffisamment régulière" (on précisera les conditions plus loin), et intégrer en espace sur $ [0,1] $
+
+On a donc :
+
+\[
+\int_{0}^{1}\partial_{t}u(x,t)v(x)dx - 
+\int_{0}^{1}\partial_{x}^{2}u(x,t)v(x)dx + 
+a\int_{0}^{1}u(x,t)v(x)dx = 0
+\]
+
+On intègre par parties la deuxième intégrale, et on suppose pour l'instant que l'on peut intervertir la dérivation par rapport au temps et l'intégration en espace dans la première intégrale (ce qui nécessite de vérifier par la suite quelques hypothèses) :
+
+\[
+\partial_{t}\int_{0}^{1}u(x,t)v(x)dx - 
+\left(
+\partial_{x}u(x,t)v(x)\mid_{0}^{1}-
+\int_{0}^{1}\partial_{x}u(x,t)\partial_{x}v(x)dx 
+\right) + 
+a\int_{0}^{1}u(x,t)v(x)dx = 0
+\]
+
+On se rappelle que $\partial_{x}u(0,t) = 0$, et on impose $ v(1)=0 $, ce qui permet d'avoir au final :
+
+\begin{align}
+\int_{0}^{1}\partial_{t}u(x,t)v(x)dx +
+\int_{0}^{1}\partial_{x}u(x,t)\partial_{x}v(x)dx +
+a\int_{0}^{1}u(x,t)v(x)dx = 0
+\end{align}
+
+Pour que toutes les intégrales aient un sens, (et avec Cauchy-Schwartz), on peut donc imposer que $ v $ et $ u(.,t) $, pour tout $ t \in [0,T] $, soient dans $ L^{2} $, dérivables et de dérivée dans $ L^{2} $, avec également $ v(1) = 0 $. On a par les CLs $ u(1,t)=0 $, donc $ v $ et $ u(.,t) $ sont dans le même espace.
+
+Concernant l'intervertion entre l'intégrale et la dérivation par rapport au temps : on a $ x \mapsto u(x,t) $ intégrable sur $ [0,1] $, $ t \mapsto u(x,t) $ dérivable pour tout $ t $. 
+
+Restera à vérifier que $ \exists g:x\mapsto g(x) $ intégrable sur $ [0,1] $ avec $ \forall t \in [0,T], |\partial_{t}u(x,t)| \leq g(x) $. (ce qui est le cas avec la formulation explicite de la solution)
+
+\subsection{Théorie du Schéma numérique}
+
+\subsubsection{Formulation}
+
+On considère le maillage en espace $ [x_{0}=0, x_{1},...,x_{i},...,x_{J-1},x_{J}=1] $.
+
+Le degré 2 des éléments finis choisis, nécessite de faire intervenir le milieu de chaque $ [x_{i},x_{i+1}] $ : on définit ainsi les noeuds $ \tilde{x}_{j} $ avec $ 0 \leq j \leq 2J $, et $ \tilde{x}_{2j} = x_{i} $ et $ \tilde{x}_{2j+1} = (x_{j}+x_{j+1}) / 2 $. En clair : $ [x_{i},x_{i+1}] = [\tilde{x}_{2i}, \tilde{x}_{2i+1}, \tilde{x}_{2i+2}]$
+
+Les 3 éléments de Lagrange P2 pour le segment $ [0,1] $ de noeuds $ [0, 1/2, 1] $ sont :
+
+\begin{align}
+\psi_{1} &= 2(x-1/2)(x-1) \\
+\psi_{2} &= -4x(x-1) \\
+\psi_{3} &= 2(x-1/2)x
+\end{align}
+
+On fait donc intervenir les $ \varphi_{j} $ avec $ 0 \leq j \leq 2J $.
+
+On pose $ \tilde{u}_{j}^{n} = u(\tilde{x}_{j},n\delta t) $ la valeur de $ u $ au noeud $ \tilde{x}_{j} $ au temps $ t^{n} = n \delta t $ (avec donc $ 0 \leq j \leq 2J $)
+
+La solution approchée de $ u $ est alors (sachant que $ \tilde{u}^{n}_{2J} = 0 $ par les conditions aux limites ):
+
+\[
+u^{n}=\sum_{j=0}^{2J-1}\tilde{u}^{n}_{j}\varphi_{j}
+\]
+
+On écrit alors la formulation variationnelle (24) en prenant $ v = \varphi_{i} $ pour $ 0 \leq i \leq 2J-1 $ :
+
+\begin{align}
+\forall i \in [0,2J-1], 
+\partial_{t}\int_{0}^{1}\sum_{j=0}^{2J-1}\tilde{u}_{j}^{n}\varphi_{j}\varphi_{i}
++ \int_{0}^{1}\sum_{j=0}^{2J-1}\tilde{u}_{j}^{n}\varphi_{j}'\varphi_{i}'
++ a \int_{0}^{1}\sum_{j=0}^{2J-1}\tilde{u}_{j}^{n}\varphi_{j}\varphi_{i} =0
+\end{align}
+
+Avec au premier ordre : 
+
+\begin{align}
+\partial_{t}u &= \sum_{j=0}^{2J-1}\partial_{t}\tilde{u}_{j}(t)\varphi_{j} \\
+&= \sum_{j=0}^{2J-1}\left( \frac{\tilde{u}_{j}^{n+1}-\tilde{u}_{j}^{n}}{\delta t}\right)
++O(\delta t)
+\end{align}
+
+On pose la matrice de masse $ M = (m_{ij}) $ de taille 2J x 2J avec
+
+\[
+m_{ij}=\int_{0}^{1}\varphi_{i}\varphi_{j} 
+\]
+
+Et la matrice de raideur $ K = (k_{ij}) $ de taille 2J x 2J avec
+
+\[
+k_{ij}=\int_{0}^{1}\varphi_{i}'\varphi_{j}' 
+\]
+
+L'équation (26) s'écrit, avec $ \tilde{U}^{n}=(\tilde{u}_{0}^{n}, \tilde{u}_{1}^{n}, ..., \tilde{u}_{2J-1}^{n}) $ :
+
+\[
+\forall i \in [0,J-1], 
+\sum_{j=0}^{2J-1}\left( \frac{\tilde{u}_{j}^{n+1}-\tilde{u}_{j}^{n}}{\delta t}\right)m_{ij}+
+\sum_{j=0}^{2J-1}k_{ij}\tilde{u}_{j}^{n}+
+a\sum_{j}^{2J-1}m_{ij}\tilde{u}^{n}_{j}=0
+\]
+
+Sous forme matricielle :
+
+\[
+\frac{M}{\delta t}(\tilde{U}^{n+1}-\tilde{U}^{n})+K\tilde{U}^{n}+aM\tilde{U}^{n}=0
+\]
+
+\begin{align}
+\frac{M}{\delta t}\tilde{U}^{n+1}=
+\left(
+\frac{M}{\delta t}-K-aM
+\right)\tilde{U}^{n}
+\end{align}
+
+\subsubsection{Matrices de masse et de rigidité}
+
+Les matrices élémentaires de masse et de rigidité sont de taille 3x3, puisque $ \int \varphi_{i}\varphi_{j} = 0 $ et $ \int \varphi_{i}'\varphi_{j}' = 0 $ dès que $ |j-i| \geq 3 $
+
+Elles sont données, pour l'intervalle $ [x_{k},x_{k+1}] $ par :
+
+\begin{align}
+M_{elem}= \frac{x_{k}-x_{k-1}}{30}
+\left(
+\begin{matrix}
+4 & 2 & -1 \\
+2 & 16 & 2 \\
+-1 & 2 & 4
+\end{matrix}
+\right)
+\end{align}
+
+\begin{align}
+K_{elem}= \frac{1}{x_{k}-x_{k-1}}\frac{1}{3}
+\left(
+\begin{matrix}
+7 & -8 & 1 \\
+-8 & 16 & -8 \\
+1 & -8 & 7
+\end{matrix}
+\right)
+\end{align}
+
+L'assemblage des matrices complètes se fait en ajoutant les matrices 3x3 élémentaires le long de la diagonale principale (cf code).
+
+
+\subsubsection{Schémas numériques}
+
+\paragraph{Schéma Explicite}
+
+\[
+\frac{M}{\delta t}(\tilde{U}^{n+1}-\tilde{U}^{n})+K\tilde{U}^{n}+aM\tilde{U}^{n}=0
+\]
+
+\begin{align}
+\frac{M}{\delta t}\tilde{U}^{n+1}=
+\left(
+\frac{M}{\delta t}-K-aM
+\right)\tilde{U}^{n}
+\end{align}
+
+\paragraph{Schéma Implicite}
+
+\[
+\frac{M}{\delta t}(\tilde{U}^{n+1}-\tilde{U}^{n})+K\tilde{U}^{n+1}+aM\tilde{U}^{n+1}=0
+\]
+
+\begin{align}
+\left(
+\frac{M}{\delta t}+K+aM
+\right)\tilde{U}^{n+1}=
+\frac{M}{\delta t}
+\tilde{U}^{n}
+\end{align}
+
+\paragraph{$\theta$ schéma}
+
+Donné par (34) x $ 1 - \theta $ + (35) x $ \theta $
+
+\[
+\frac{M}{\delta t}(\tilde{U}^{n+1}-\tilde{U}^{n})
++(1-\theta)*(K+aM)\tilde{U}^{n}
++\theta*(K+aM)\tilde{U}^{n+1}=0
+\]
+
+\[
+\left(
+\frac{M}{\delta t}+\theta(K+aM)
+\right)\tilde{U}^{n+1}-
+\left(
+\frac{M}{\delta t}-(K+aM)(1-\theta)\right)\tilde{U}^{n}=0
+\]
+
+Soit finalement :
+
+\begin{align}
+\left(
+\frac{M}{\delta t}+\theta(K+aM)
+\right)
+\tilde{U}^{n+1} = 
+\left(
+\frac{M}{\delta t}-(1-\theta)(K+aM)
+\right)
+\tilde{U}^{n}
+\end{align}
+
+
+
+
+
 
 
 
